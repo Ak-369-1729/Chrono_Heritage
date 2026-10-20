@@ -1,0 +1,70 @@
+# ChronoHeritage V3.0 — local development / single-host deployment.
+#   copy .env.example to .env and set the secrets (docs/WINDOWS_SETUP.md shows how on Windows)
+#   docker compose up --build -d
+# Web: http://localhost:3000   API docs: http://localhost:3000/api/docs   API health: http://localhost:8000/api/v2/health
+name: chronoheritage
+
+services:
+  db:
+    image: postgis/postgis:16-3.4
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-chronoheritage}
+      POSTGRES_USER: ${POSTGRES_USER:-chrono}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-chrono} -d ${POSTGRES_DB:-chronoheritage}"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  api:
+    build: ./backend
+    image: chronoheritage/api:3.0
+    command: ["api"]
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      CHRONO_DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-chrono}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-chronoheritage}
+      CHRONO_RUN_JOBS_INLINE: "false"
+    volumes:
+      - artifacts:/data/artifacts
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "${CHRONO_API_PORT:-8000}:8000"
+
+  worker:
+    build: ./backend  # same image as the api (the second build is served from the cache)
+    image: chronoheritage/api:3.0
+    command: ["worker"]
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      CHRONO_DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-chrono}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-chronoheritage}
+    volumes:
+      - artifacts:/data/artifacts
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      disable: true
+
+  web:
+    build: ./frontend
+    image: chronoheritage/web:3.0
+    restart: unless-stopped
+    environment:
+      CHRONO_API_URL: http://api:8000
+    depends_on:
+      api:
+        condition: service_healthy
+    ports:
+      - "${CHRONO_WEB_PORT:-3000}:3000"
+
+volumes:
+  pgdata:
+  artifacts:

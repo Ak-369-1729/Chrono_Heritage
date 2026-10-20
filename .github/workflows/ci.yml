@@ -1,0 +1,155 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHON_VERSION: "3.13"
+  NODE_VERSION: "22"
+
+jobs:
+  backend:
+    runs-on: ubuntu-24.04
+    services:
+      db:
+        image: postgis/postgis:16-3.4
+        env: { POSTGRES_USER: chrono, POSTGRES_PASSWORD: chrono_ci, POSTGRES_DB: chronoheritage_test }
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U chrono" --health-interval 5s --health-timeout 5s --health-retries 20
+    env:
+      CHRONO_TEST_DATABASE_URL: postgresql+psycopg://chrono:chrono_ci@localhost:5432/chronoheritage_test
+    defaults: { run: { working-directory: backend } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "${{ env.PYTHON_VERSION }}", cache: pip, cache-dependency-path: backend/requirements*.txt }
+      - run: pip install -r requirements-dev.txt
+      - run: ruff check .
+      - run: pytest --cov=app --cov-report=term-missing --junitxml=pytest.xml
+      - name: Benchmark harness (offline; Horizons cases report "blocked")
+        run: python -m app.benchmarks.harness --no-horizons --out benchmark-results.json --markdown benchmark-results.md --fail-on fail
+        env: { CHRONO_GIT_SHA: "${{ github.sha }}" }
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: backend-results, path: "backend/pytest.xml\nbackend/benchmark-results.*" }
+
+  frontend:
+    runs-on: ubuntu-24.04
+    defaults: { run: { working-directory: frontend } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: "${{ env.NODE_VERSION }}", cache: npm, cache-dependency-path: frontend/package-lock.json }
+      - run: npm ci --no-audit --no-fund
+      - run: npx tsc --noEmit
+      - run: npx vitest run
+      - run: npm run build
+
+  e2e:
+    needs: [backend, frontend]
+    runs-on: ubuntu-24.04
+    services:
+      db:
+        image: postgis/postgis:16-3.4
+        env: { POSTGRES_USER: chrono, POSTGRES_PASSWORD: chrono_ci, POSTGRES_DB: chronoheritage }
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U chrono" --health-interval 5s --health-timeout 5s --health-retries 20
+    env:
+      CHRONO_DATABASE_URL: postgresql+psycopg://chrono:chrono_ci@localhost:5432/chronoheritage
+      CHRONO_SECRET_KEY: ci-only-secret-not-used-anywhere-else-0123456789
+      CHRONO_HORIZONS_ENABLED: "false"
+      CHRONO_REGISTRATION_MODE: open
+      # the e2e suite signs up many throw-away accounts from one address
+      CHRONO_REGISTER_LIMIT_PER_HOUR: "2000"
+      CHRONO_LOGIN_LIMIT_PER_5MIN: "500"
+      CHRONO_API_URL: http://localhost:8000
+      E2E_ADMIN_EMAIL: admin@ci.example.org
+      E2E_ENGINES: chromium,firefox,webkit
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "${{ env.PYTHON_VERSION }}", cache: pip, cache-dependency-path: backend/requirements*.txt }
+      - uses: actions/setup-node@v4
+        with: { node-version: "${{ env.NODE_VERSION }}", cache: npm, cache-dependency-path: frontend/package-lock.json }
+      - name: Start API with demo data and a throw-away administrator
+        working-directory: backend
+        run: |
+          pip install -r requirements.txt
+          alembic upgrade head
+          python -m app.seed
+          # a random admin password for this run only; masked in the log and never stored
+          PW=$(python -c "import secrets;print(secrets.token_urlsafe(24))")
+          echo "::add-mask::$PW"
+          echo "E2E_ADMIN_PASSWORD=$PW" >> "$GITHUB_ENV"
+          E2E_PW="$PW" python -m app.manage create-user --email "$E2E_ADMIN_EMAIL" --role admin --password-env E2E_PW
+          nohup uvicorn app.main:app --port 8000 > api.log 2>&1 &
+      - name: Build and start web
+        working-directory: frontend
+        run: |
+          npm ci --no-audit --no-fund
+          npm run build
+          nohup npx next start -p 3000 > web.log 2>&1 &
+          npx wait-on -t 60000 http://localhost:3000 http://localhost:8000/api/v2/health
+      - name: Record a benchmark run through the API (for the benchmark screens)
+        run: |
+          TOKEN=$(curl -s -X POST localhost:8000/api/v2/auth/login -H 'content-type: application/json' \
+            -d "{\"email\":\"$E2E_ADMIN_EMAIL\",\"password\":\"$E2E_ADMIN_PASSWORD\"}" | python -c "import sys,json;print(json.load(sys.stdin)['token'])")
+          curl -s -X POST localhost:8000/api/v2/benchmarks/runs -H "authorization: Bearer $TOKEN"
+          sleep 20
+      - working-directory: frontend
+        run: npx playwright install --with-deps chromium firefox webkit && npx playwright test
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: e2e, path: "frontend/test-results\nfrontend/e2e-results.json\nbackend/api.log\nfrontend/web.log" }
+
+  compose:
+    # Builds the real images from the official base images and checks that the stack starts and answers.
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create .env with random secrets
+        run: |
+          cp .env.example .env
+          sed -i "s/^POSTGRES_PASSWORD=.*/POSTGRES_PASSWORD=$(openssl rand -hex 24)/" .env
+          sed -i "s/^CHRONO_SECRET_KEY=.*/CHRONO_SECRET_KEY=$(openssl rand -hex 48)/" .env
+          sed -i "s/^CHRONO_HORIZONS_ENABLED=.*/CHRONO_HORIZONS_ENABLED=false/" .env
+      - run: docker compose up --build -d --wait --wait-timeout 300
+      - name: Smoke test
+        run: |
+          curl -sf http://localhost:8000/api/v2/health | tee health.json
+          python3 -c "import json;assert json.load(open('health.json'))['ok']"
+          curl -sf -o /dev/null http://localhost:3000/
+          curl -sf http://localhost:3000/api/v2/auth/registration | grep -q '"mode"'
+          PW=$(openssl rand -hex 16); echo "::add-mask::$PW"
+          docker compose exec -T -e SMOKE_PW="$PW" api python -m app.manage create-user --email smoke@example.org --role researcher --password-env SMOKE_PW
+          docker compose ps
+      - if: always()
+        run: docker compose logs --no-color > compose.log; docker compose down -v
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: compose-log, path: compose.log }
+
+  benchmarks-live:
+    # Runs the full suite including live JPL Horizons queries. Separate so that third-party
+    # availability never masks code failures; results are archived for the Phase 0.5 record.
+    if: github.event_name == 'push'
+    runs-on: ubuntu-24.04
+    defaults: { run: { working-directory: backend } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "${{ env.PYTHON_VERSION }}", cache: pip, cache-dependency-path: backend/requirements*.txt }
+      - run: pip install -r requirements.txt
+      - run: python -m app.benchmarks.harness --out benchmark-live.json --markdown benchmark-live.md --fail-on fail
+        env: { CHRONO_GIT_SHA: "${{ github.sha }}" }
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: benchmark-live, path: "backend/benchmark-live.*" }

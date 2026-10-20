@@ -1,0 +1,16 @@
+.env
+backend/.venv/
+backend/artifacts/
+**/__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+frontend/node_modules/
+frontend/.next/
+frontend/public/vendor/
+frontend/test-results/
+frontend/playwright-report/
+frontend/e2e-results.json
+frontend/tsconfig.tsbuildinfo
+frontend/next-env.d.ts
+benchmark-results.*

@@ -1,0 +1,25 @@
+[project]
+name = "chronoheritage-backend"
+version = "3.0.0"
+description = "ChronoHeritage API, science modules and benchmark harness"
+requires-python = ">=3.12"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q -p no:cacheprovider"
+markers = [
+  "slow: long-running tests (benchmark suite, astropy references)",
+  "network: requires internet access to third-party references",
+]
+filterwarnings = ["ignore::DeprecationWarning", "ignore:.*dubious year.*", "ignore:.*ERFA.*"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP"]
+ignore = ["E501", "B008", "B905", "UP042"]
+
+[tool.ruff.lint.isort]
+known-third-party = ["alembic"]

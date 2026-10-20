@@ -1,0 +1,5 @@
+# Shell scripts and Dockerfiles must keep LF line endings, also when checked out on Windows.
+*.sh text eol=lf
+Dockerfile text eol=lf
+*.py text eol=lf
+*.ps1 text eol=crlf

@@ -97,7 +97,9 @@ export const FORT = {
   gateHalfWidth: 6.2,
   gateHeight: 19, // apex of the arch opening
   gateSpring: 12, // springing line of the arch
-  instrument: { x: -26, z: -64 },
+  rearGateHalfWidth: 3.5,
+  rearGateHeight: 12,
+  instrument: { x: -10, z: -104 },
 };
 
 interface Key {
@@ -112,18 +114,23 @@ export const CAMERA_KEYS: Key[] = [
   { p: 0.12, pos: [24, 6.5, 235], look: [0, 19, 0] },
   { p: 0.2, pos: [7, 7.5, 128], look: [0, 15, 0] },
   { p: 0.3, pos: [0, 7.5, 30], look: [0, 11, -80] },
-  { p: 0.36, pos: [0, 7.5, -10], look: [0, 13, -90] },
-  { p: 0.47, pos: [12, 9, -28], look: [-70, 40, -76] },
-  { p: 0.53, pos: [24, 15, -16], look: [-16, 3, -70] },
-  { p: 0.64, pos: [16, 18, -24], look: [-20, 2, -72] },
-  { p: 0.67, pos: [8, 12, -48], look: [0, 9, -110] },
-  { p: 0.70, pos: [3, 8.5, -92], look: [0, 8, -146] },
-  { p: 0.72, pos: [0, 8.5, -128], look: [0, 8.5, -190] },
-  { p: 0.75, pos: [0, 8.5, -158], look: [0, 9, -218] },
-  { p: 0.80, pos: [0, 10, -200], look: [0, 14, -270] },
-  { p: 0.84, pos: [0, 13, -224], look: [0, 18, -310] },
-  { p: 0.90, pos: [0, 17, -238], look: [0, 23, -360] },
-  { p: 1.0, pos: [0, 20, -240], look: [0, 25, -410] },
+  { p: 0.32, pos: [0, 7.5, -4], look: [0, 10, -42] },
+  { p: 0.36, pos: [0, 8, -18], look: [0, 10, -42] },
+  { p: 0.4, pos: [0, 8, -38], look: [0, 10, -60] },
+  { p: 0.45, pos: [0, 8, -58], look: [0, 10, -80] },
+  { p: 0.5, pos: [0, 8, -78], look: [0, 10, -96] },
+  { p: 0.52, pos: [0, 18, -84], look: [0, 20, -105] },
+  { p: 0.54, pos: [0, 18, -91], look: [0, 20, -105] },
+  { p: 0.6, pos: [0, 18, -105], look: [0, 20, -115] },
+  { p: 0.65, pos: [0, 18, -119], look: [0, 20, -135] },
+  { p: 0.66, pos: [0, 8, -122], look: [0, 10, -150] },
+  { p: 0.68, pos: [0, 8, -137], look: [0, 10, -160] },
+  { p: 0.72, pos: [0, 8, -154], look: [0, 10, -174] },
+  { p: 0.78, pos: [0, 8, -184], look: [0, 10, -202] },
+  { p: 0.82, pos: [0, 8, -205], look: [0, 10, -222] },
+  { p: 0.86, pos: [0, 12, -220], look: [0, 17, -254] },
+  { p: 0.92, pos: [0, 17, -238], look: [0, 24, -290] },
+  { p: 1.0, pos: [0, 20, -250], look: [0, 25, -410] },
 ];
 
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
@@ -175,6 +182,9 @@ export function layerState(p: number) {
     skyTurnDeg: (skyRotation(p) * 180) / Math.PI,
     instrument: window4(p, SCENES.instrument[0] - 0.02, SCENES.instrument[0] + 0.03, SCENES.instrument[1] - 0.01, SCENES.instrument[1] + 0.03),
     plan: Math.min(ramp(p, SCENES.vault[0] - 0.01, SCENES.vault[0] + 0.05), 1 - ramp(p, SCENES.workspace[0], SCENES.workspace[0] + 0.08)),
+    gallery: window4(p, 0.29, 0.32, 0.37, 0.4),
+    horizons: window4(p, 0.37, 0.4, 0.47, 0.5),
+    vault: window4(p, SCENES.vault[0] - 0.02, SCENES.vault[0] + 0.03, SCENES.vault[1] - 0.04, SCENES.vault[1]),
     terrace: ramp(p, SCENES.workspace[0] + 0.015, SCENES.workspace[0] + 0.12),
     dawn: dawnGlow(p),
   };

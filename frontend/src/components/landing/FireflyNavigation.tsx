@@ -153,7 +153,7 @@ export function FireflyNavigation({ room }: { room?: SceneKey }) {
             type="button"
             className={`firefly-discovery firefly-discovery-${i + 1}`}
             style={{ left: `${46 + (i % 2) * 8}%`, top: `${25 + i * 9}%` }}
-            aria-label={`Discover: ${discovery.title}`}
+            aria-label={`Did you know? ${discovery.title}`}
             aria-haspopup="dialog"
             aria-expanded={openDiscovery === discovery.id}
             aria-controls={openDiscovery === discovery.id ? cardId : undefined}
@@ -163,7 +163,7 @@ export function FireflyNavigation({ room }: { room?: SceneKey }) {
             }}
           >
             <span aria-hidden className="firefly-discovery-core" />
-            <span className="firefly-discovery-hint">Discover</span>
+            <span className="firefly-discovery-hint">Did you know?</span>
           </button>
         ))}
       </div>

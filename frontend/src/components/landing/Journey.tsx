@@ -222,14 +222,14 @@ function PinnedJourney({ state, onFail, onSlow, onChooseStatic }: { state: ModeS
         {(["courtyard", "instrument", "vault"] as const).map((k) => (
           <div key={k} ref={reg(`panel-${k}`)} style={{ opacity: 0, visibility: "hidden" }}
             className="niche absolute left-[var(--gutter)] right-[var(--gutter-r)] top-[calc(var(--nav-h)+2.6rem)] bg-obsidian/88 p-4 backdrop-blur-sm md:left-auto md:right-10 md:top-auto md:bottom-[14vh] md:w-[min(460px,42vw)] lg:right-20">
-            <p className="mb-2 text-xs text-sandstone">{k === "courtyard" ? "Live calculation" : k === "instrument" ? "The instrument, illustrated" : "Evidence ledger, live"}</p>
+            <p className="mb-2 text-xs text-sandstone">{k === "courtyard" ? "Rajasthani Courtyard · live analysis" : k === "instrument" ? "Instrument Chamber · illustrated instrument" : "Evidence Vault / Archive · live ledger"}</p>
             {k === "courtyard" ? <EpochPanel compact={isNarrow} /> : k === "instrument" ? <InstrumentPanel compact={isNarrow} /> : <LedgerPanel compact={isNarrow} />}
           </div>
         ))}
 
         {/* F: the brass axis swings into the chart's reference line */}
         <div className="pointer-events-none absolute inset-0 flex items-start justify-center px-4 pt-[calc(var(--nav-h)+2vh)] md:justify-end md:pr-[6vw] md:pt-[15vh]">
-          <div className="workspace-chart-plate niche pointer-events-none w-[min(760px,94vw)] p-2 md:w-[min(720px,54vw)] md:p-4">
+          <div ref={reg("workspace-chart")} style={{ opacity: 0, visibility: "hidden" }} className="workspace-chart-plate niche pointer-events-none w-[min(760px,94vw)] p-2 md:w-[min(720px,54vw)] md:p-4">
             <svg viewBox={`0 0 ${CHART.w} ${CHART.h}`} className="w-full overflow-visible" aria-hidden>
               <g ref={reg("s6frame")} style={{ opacity: 0 }}><ChartFrame scales={scales} fontSize={isNarrow ? 17 : 11} /></g>
               {data.epoch.data ? (
@@ -335,6 +335,7 @@ function paintOverlay(p: number, el: Record<string, HTMLElement | SVGElement | n
   show("caption", 1 - ramp(p, S.workspace[0], S.workspace[0] + 0.04));
 
   const w0 = S.workspace[0];
+  show("workspace-chart", ramp(p, w0 + 0.015, w0 + 0.06));
   const swing = ramp(p, w0 + 0.02, w0 + 0.09);
   const axis = el.s6axis as SVGLineElement | null;
   if (axis) {

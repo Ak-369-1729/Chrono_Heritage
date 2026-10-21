@@ -60,4 +60,22 @@ export const HERITAGE_DISCOVERIES: HeritageDiscovery[] = [
     sourceUrl: "/documentation",
     room: "vault",
   },
+  {
+    id: "polar-gnomon",
+    category: "Instrument design",
+    title: "A gnomon's slope follows the pole",
+    fact: "For a polar gnomon, the aligned edge is elevated by the observer's latitude; this illustrative instrument uses 27° N.",
+    source: "ChronoHeritage Sky Explorer",
+    sourceUrl: "/sky",
+    room: "instrument",
+  },
+  {
+    id: "open-sky",
+    category: "Observing conditions",
+    title: "The terrace brings back the sky",
+    fact: "Stars disappear beneath the covered gallery and archive, then return above the open rooftop terrace.",
+    source: "ChronoHeritage scene design",
+    sourceUrl: "/documentation",
+    room: "workspace",
+  },
 ];

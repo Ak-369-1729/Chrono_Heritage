@@ -105,6 +105,29 @@ export function Fortress({ high }: { high: boolean }) {
       rearWalk: stoneBox(22, 0.8, 108),
       lookout: stoneBox(76, 1.4, 52),
       baluster: stoneBox(0.8, 2.2, 0.8),
+      roomPortal: wallWithArch(54, 22, 2, { w: 16, h: 16, lobes: 9 }),
+      roomSide: stoneBox(2, 22, 124),
+      vaultSide: stoneBox(2, 20, 72),
+      vaultPortal: wallWithArch(46, 20, 2, { w: 18, h: 15, lobes: 9 }),
+      vaultArch: archPlane(5.2, 9.5, 9),
+      vaultWindow: archPlane(4.4, 6.8, 7),
+      facade: stoneBox(116, 37, 3),
+      facadeWindow: archPlane(5.8, 7.2, 9),
+      vaultRib: new THREE.TubeGeometry(
+        new THREE.CatmullRomCurve3([
+          new THREE.Vector3(-26, 17, 0),
+          new THREE.Vector3(-23, 21, 0),
+          new THREE.Vector3(-17, 25, 0),
+          new THREE.Vector3(0, 28, 0),
+          new THREE.Vector3(17, 25, 0),
+          new THREE.Vector3(23, 21, 0),
+          new THREE.Vector3(26, 17, 0),
+        ]),
+        40,
+        0.72,
+        8,
+        false,
+      ),
     };
   }, []);
 
@@ -179,6 +202,33 @@ export function Fortress({ high }: { high: boolean }) {
       {/* gateway: a pishtaq with a cusped arch */}
       <mesh geometry={geo.pishtaq} material={mats.stone} castShadow receiveShadow />
       <mesh material={mats.stoneDark} position={[0, 26.35, -1.9]}><boxGeometry args={[23.5, 0.7, 7.6]} /></mesh>
+      {/* Four storeys of jharokha windows turn the gate into a palace facade, not a bare fort wall. */}
+      <group position={[0, 0, 2.3]}>
+        <mesh geometry={geo.facade} material={mats.stone} position={[0, 35.5, -1.5]} castShadow receiveShadow />
+        {[0, 1, 2, 3].map((row) => (
+          <group key={row} position={[0, 19 + row * 8.4, 0]}>
+            {Array.from({ length: 9 }, (_, i) => {
+              const x = -50 + i * 12.5;
+              return (
+                <group key={i} position={[x, 0, 0]}>
+                  <mesh geometry={geo.facadeWindow} material={mats.niche} position={[0, 0, 0.25]} />
+                  <mesh material={mats.jali} position={[0, 3.3, 0.34]}><planeGeometry args={[4.7, 4.5]} /></mesh>
+                  <mesh material={mats.stoneDark} position={[0, -0.55, 1.3]}><boxGeometry args={[7.2, 0.55, 3.2]} /></mesh>
+                  <mesh material={mats.stone} position={[-3.1, -1.25, 1.6]}><boxGeometry args={[0.45, 1.5, 0.45]} /></mesh>
+                  <mesh material={mats.stone} position={[3.1, -1.25, 1.6]}><boxGeometry args={[0.45, 1.5, 0.45]} /></mesh>
+                </group>
+              );
+            })}
+            <mesh material={mats.stoneDark} position={[0, -1.1, 0.15]}><boxGeometry args={[117, 0.7, 4.8]} /></mesh>
+          </group>
+        ))}
+        <mesh material={mats.stoneDark} position={[0, 53.4, 0]}><boxGeometry args={[120, 1.4, 6]} /></mesh>
+        {Array.from({ length: 23 }, (_, i) => (
+          <mesh key={i} material={mats.stoneDark} position={[-57.5 + i * 5.2, 54.8, 0]}>
+            <boxGeometry args={[2.3, 2.2, 4.5]} />
+          </mesh>
+        ))}
+      </group>
       {/* jharokha balcony above the arch */}
       <group position={[0, 20.3, 1.9]}>
         <mesh material={mats.stoneDark} position={[0, 0, 0.6]}><boxGeometry args={[9, 0.6, 3.2]} /></mesh>
@@ -246,6 +296,53 @@ export function Fortress({ high }: { high: boolean }) {
         </group>
       ))}
 
+      {/* Interconnected gallery, horizon room, open courtyard and instrument chamber. */}
+      {[ -34, -62, -90 ].map((z) => (
+        <group key={`room-portal-${z}`}>
+          <mesh geometry={geo.roomPortal} material={mats.stone} position={[0, 0, z]} castShadow receiveShadow />
+          <mesh material={mats.stoneDark} position={[0, 22.4, z - 0.1]}><boxGeometry args={[56, 0.65, 3]} /></mesh>
+          {[-1, 1].map((side) => (
+            <mesh key={side} material={mats.stoneDark} position={[side * 25, 11, z - 0.15]}>
+              <boxGeometry args={[2, 22, 3]} />
+            </mesh>
+          ))}
+        </group>
+      ))}
+      {[-1, 1].map((side) => (
+        <mesh key={`inner-wall-${side}`} geometry={geo.roomSide} material={mats.stone} position={[side * 27, 11, -64]} castShadow receiveShadow />
+      ))}
+      {[-9, -20, -31, -40, -51, -94, -106, -117].map((z) => (
+        <mesh key={`vault-rib-${z}`} geometry={geo.vaultRib} material={mats.stoneDark} position={[0, 0, z]} castShadow />
+      ))}
+      {/* Jharokha gallery balconies look into the connecting passage. */}
+      {[-1, 1].map((side) => [-13, -25].map((z) => (
+        <group key={`gallery-jharokha-${side}-${z}`} position={[side * 24.7, 12, z]}>
+          <mesh material={mats.stoneDark} position={[side * 1.2, 0, 0]}><boxGeometry args={[4, 0.65, 7]} /></mesh>
+          <mesh material={mats.jali} position={[side * 1.4, 2.2, 0]} rotation={[0, side * Math.PI / 2, 0]}><planeGeometry args={[6, 3.8]} /></mesh>
+          <mesh material={mats.stone} position={[side * 1.3, 4.2, 0]}><boxGeometry args={[3.7, 0.45, 7.4]} /></mesh>
+        </group>
+      )))}
+      {/* A horizon aperture and a floor compass make this a distinct sky-observation room. */}
+      <group position={[0, 0, -49]}>
+        {[-1, 1].map((side) => (
+          <group key={`horizon-window-${side}`} position={[side * 25.7, 5, 0]} rotation={[0, side * Math.PI / 2, 0]}>
+            <mesh geometry={geo.vaultArch} material={mats.stoneDark} />
+            <mesh geometry={geo.vaultWindow} material={mats.windowGlow} position={[0, 1, 0.04]} />
+          </group>
+        ))}
+        {[5, 8, 11].map((radius) => (
+          <mesh key={radius} material={mats.brass} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.11, 0]}>
+            <torusGeometry args={[radius, 0.08, 5, 72]} />
+          </mesh>
+        ))}
+        <mesh material={mats.brass} position={[0, 0.2, 0]}><cylinderGeometry args={[0.55, 0.55, 0.18, 16]} /></mesh>
+      </group>
+      {/* The analysis courtyard remains open to the sky, with a low central sundial plinth. */}
+      <group position={[0, 0, -76]}>
+        <mesh material={mats.stoneDark} position={[0, 0.35, 0]}><cylinderGeometry args={[5.5, 6.3, 0.7, 12]} /></mesh>
+        <mesh material={mats.brass} position={[0, 1.5, 0]}><coneGeometry args={[0.55, 2.4, 6]} /></mesh>
+      </group>
+
       {/* The rear arch continues into a paved walk and an open lookout terrace. */}
       <mesh geometry={geo.rearWalk} material={mats.stone} position={[0, 0.15, -178]} receiveShadow />
       <mesh geometry={geo.lookout} material={mats.stone} position={[0, 0.45, -250]} receiveShadow />
@@ -271,6 +368,62 @@ export function Fortress({ high }: { high: boolean }) {
           <mesh material={mats.brass}><boxGeometry args={[0.35, 0.5, 0.35]} /></mesh>
           <mesh material={mats.lamp} position={[0, 0.55, 0]}><cylinderGeometry args={[0.2, 0.2, 0.5, 6]} /></mesh>
           <pointLight color="#ffbd78" intensity={18} distance={24} decay={2} />
+        </group>
+      ))}
+      {/* A real enclosed evidence room sits beyond the courtyard's rear arch. */}
+      <mesh material={mats.floor} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.08, -168]} receiveShadow>
+        <planeGeometry args={[44, 72]} />
+      </mesh>
+      {[-1, 1].map((side) => (
+        <mesh key={`vault-side-${side}`} geometry={geo.vaultSide} material={mats.stone} position={[side * 23, 10, -168]} castShadow receiveShadow />
+      ))}
+      <mesh geometry={geo.vaultPortal} material={mats.stone} position={[0, 0, -202]} castShadow receiveShadow />
+      <mesh geometry={geo.vaultPortal} material={mats.stone} position={[0, 0, -132]} rotation={[0, Math.PI, 0]} castShadow receiveShadow />
+      {[-1, 1].map((side) => (
+        <group key={`archive-shelves-${side}`} position={[side * 18.5, 0, -168]}>
+          {[-26, -12, 2, 16, 28].map((z) => (
+            <group key={z} position={[0, 0, z]}>
+              <mesh material={mats.stoneDark} position={[0, 8, 0]}><boxGeometry args={[5, 16, 1.3]} /></mesh>
+              {[3, 7, 11, 15].map((y) => (
+                <mesh key={y} material={mats.stone} position={[0, y, 0.9]}><boxGeometry args={[5.8, 0.35, 2.1]} /></mesh>
+              ))}
+              {[4.2, 8.1, 12.1].map((y, i) => (
+                <mesh key={y} material={i % 2 ? mats.brass : mats.dome} position={[-0.8 + i * 0.8, y, 1.5]} rotation={[0, 0, Math.PI / 2]}>
+                  <cylinderGeometry args={[0.42, 0.42, 1.2, 8]} />
+                </mesh>
+              ))}
+            </group>
+          ))}
+        </group>
+      ))}
+      {[-1, 1].map((side) => (
+        <group key={`archive-end-shelf-${side}`} position={[side * 15, 0, -195]}>
+          <mesh material={mats.stoneDark} position={[0, 7, 0]}><boxGeometry args={[10, 14, 1.5]} /></mesh>
+          {[2, 5, 8, 11].map((y) => (
+            <mesh key={y} material={mats.stone} position={[0, y, 1]}><boxGeometry args={[11, 0.4, 2.4]} /></mesh>
+          ))}
+          {[-3.5, 0, 3.5].map((x, i) => (
+            <mesh key={x} material={i % 2 ? mats.brass : mats.dome} position={[x, 3.5, 1.7]} rotation={[0, 0, Math.PI / 2]}>
+              <cylinderGeometry args={[0.5, 0.5, 1.4, 8]} />
+            </mesh>
+          ))}
+        </group>
+      ))}
+      <group position={[0, 0, -177]}>
+        <mesh material={mats.stoneDark} position={[0, 1.5, 0]}><boxGeometry args={[13, 1.1, 6]} /></mesh>
+        {[-5, 5].map((x) => (
+          <mesh key={x} material={mats.stone} position={[x, 0.65, 0]}><boxGeometry args={[0.8, 1.3, 0.8]} /></mesh>
+        ))}
+        {[-3, 0, 3].map((x, i) => (
+          <mesh key={x} material={i % 2 ? mats.brass : mats.dome} position={[x, 2.2, 0]} rotation={[0, 0, Math.PI / 2]}>
+            <cylinderGeometry args={[0.52, 0.52, 1.8, 8]} />
+          </mesh>
+        ))}
+      </group>
+      {[-19, -11, -3, 5, 13, 21].map((x) => (
+        <group key={`archive-lantern-${x}`} position={[x, 15, -168]}>
+          <mesh material={mats.brass}><cylinderGeometry args={[0.12, 0.12, 1.1, 6]} /></mesh>
+          <pointLight color="#ffca85" intensity={12} distance={14} decay={2} />
         </group>
       ))}
       <group position={[0, 0, -400]}>

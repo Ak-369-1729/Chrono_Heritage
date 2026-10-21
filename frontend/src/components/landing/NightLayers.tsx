@@ -41,6 +41,9 @@ export function paintLayers(p: number, el: Refs) {
   set("starsOut", "transform", `rotate(${(-s.skyTurnDeg * 0.25).toFixed(2)} 800 300)`);
   set("instrument", "opacity", s.instrument.toFixed(3));
   set("plan", "opacity", s.plan.toFixed(3));
+  set("gallery", "opacity", s.gallery.toFixed(3));
+  set("horizons", "opacity", s.horizons.toFixed(3));
+  set("vaultRoom", "opacity", s.vault.toFixed(3));
   set("terrace", "opacity", s.terrace.toFixed(3));
   set("city", "opacity", s.terrace.toFixed(3));
   set("glow", "opacity", s.dawn.toFixed(3));
@@ -231,6 +234,67 @@ export function NightLayers({ at = 0, painter, className = "", label }: {
           <line x1="0" y1="0" x2="-420" y2="-60" stroke="#d6b16d" strokeWidth="2" />
           <circle r="4" fill="#d6b16d" />
         </g>
+        <g ref={reg("gallery")} opacity="0">
+          <rect width={VW} height={VH} fill="#49383a" />
+          <path d="M0 140 L800 320 L1600 140 V760 L800 660 L0 760 Z" fill="#6d5148" />
+          <path d="M0 760 L800 660 L1600 760 V1000 H0 Z" fill="url(#nl-court)" />
+          <path d="M0 135 Q800 -110 1600 135" fill="none" stroke="#c49a6c" strokeWidth="34" />
+          {[0, 1, 2, 3, 4].map((i) => (
+            <path key={i} d={`M${i * 400} 160 Q800 ${-20 + i * 18} ${1600 - i * 400} 160`} fill="none" stroke="#9c765e" strokeWidth="9" opacity="0.8" />
+          ))}
+          {[235, 510, 800, 1090, 1365].map((x) => (
+            <g key={x} transform={`translate(${x} 286)`}>
+              <path d={geo.courtArch} transform="translate(-38 0) scale(1.08 1.25)" fill="#30272d" stroke="#d0a477" strokeWidth="4" />
+              <rect x="-31" y="28" width="62" height="72" fill="url(#nl-jali)" opacity="0.85" />
+              <path d="M-52 118 H52 L62 132 H-62 Z" fill="#c49a6c" />
+            </g>
+          ))}
+          <path d="M0 745 L800 650 L1600 745" fill="none" stroke="#d2ae82" strokeWidth="7" />
+          {[0, 1, 2, 3, 4, 5].map((i) => (
+            <path key={i} d={`M${220 + i * 175} 1000 L${690 + i * 44} 666`} fill="none" stroke="#c49a6c" strokeOpacity="0.35" strokeWidth="3" />
+          ))}
+        </g>
+        <g ref={reg("horizons")} opacity="0">
+          <rect width={VW} height={VH} fill="#302b35" />
+          <path d="M0 180 Q800 -70 1600 180 V740 L800 660 L0 740 Z" fill="#74554e" />
+          <path d="M0 632 Q290 596 545 624 T1080 618 T1600 628 V760 H0 Z" fill="#5d5557" />
+          <path d="M0 760 L800 654 L1600 760 V1000 H0 Z" fill="url(#nl-court)" />
+          <path d={geo.courtArch} transform="translate(558 168) scale(6.9 4.8)" fill="#282630" stroke="#d0a477" strokeWidth="7" />
+          <path d="M680 520 Q800 475 920 520 V640 H680 Z" fill="#d99668" />
+          <path d="M680 532 Q800 510 920 532" fill="none" stroke="#f1c38c" strokeWidth="5" />
+          <g fill="#e9c48f" opacity="0.72">
+            {[716, 756, 800, 844, 884].map((x) => <circle key={x} cx={x} cy={552 - Math.abs(800 - x) * 0.16} r="3" />)}
+          </g>
+          {[180, 320, 480, 1120, 1280, 1420].map((x) => (
+            <path key={x} d={`M${x} 1000 L${800 + (x - 800) * 0.14} 660`} stroke="#d4b086" strokeOpacity="0.35" strokeWidth="3" />
+          ))}
+          <path d="M0 1000 H1600 M0 910 Q800 790 1600 910 M0 830 Q800 720 1600 830" fill="none" stroke="#c49a6c" strokeOpacity="0.32" strokeWidth="3" />
+        </g>
+        <g ref={reg("vaultRoom")} opacity="0">
+          <rect width={VW} height={VH} fill="#2c262a" />
+          <path d="M0 0 H1600 V720 L800 630 L0 720 Z" fill="#49383a" />
+          <path d="M0 720 L800 630 L1600 720 V1000 H0 Z" fill="url(#nl-court)" />
+          <path d="M530 750 V160 Q800 60 1070 160 V750" fill="#30272d" stroke="#b18a64" strokeWidth="10" />
+          {[110, 275, 1325, 1490].map((x) => (
+            <g key={x}>
+              <rect x={x} y="190" width="145" height="490" fill="#332a2d" stroke="#8e6b52" strokeWidth="5" />
+              {[270, 375, 480, 585].map((y) => (
+                <g key={y}>
+                  <path d={`M${x + 10} ${y} h125`} stroke="#b18a64" strokeWidth="8" />
+                  {[0, 1, 2, 3].map((i) => (
+                    <ellipse key={i} cx={x + 30 + i * 29} cy={y - 14} rx="10" ry="17" fill={i % 2 ? "#d6b16d" : "#d5c09e"} />
+                  ))}
+                </g>
+              ))}
+            </g>
+          ))}
+          <path d="M620 700 V190 Q800 120 980 190 V700" fill="#45383a" stroke="#c49a6c" strokeWidth="6" />
+          <path d="M700 700 V290 Q800 240 900 290 V700" fill="#d49468" opacity="0.24" />
+          {[0, 1, 2, 3].map((i) => (
+            <path key={i} d={`M${620 + i * 30} 700 L${760 + i * 10} 640 M${980 - i * 30} 700 L${840 - i * 10} 640`} stroke="#d6b16d" strokeOpacity="0.55" strokeWidth="3" />
+          ))}
+          <path d="M0 895 Q800 760 1600 895 M0 960 Q800 820 1600 960" fill="none" stroke="#c49a6c" strokeOpacity="0.3" strokeWidth="3" />
+        </g>
       </g>
       {/* ---------------------------------------------------------------- outside: desert and fortress */}
       <g ref={reg("outside")} mask="url(#nl-gatemask)">
@@ -252,6 +316,20 @@ export function NightLayers({ at = 0, painter, className = "", label }: {
           <path d="M380 760 L1220 760 L1260 790 L340 790 Z" fill="#382b30" />
           <path d="M340 790 L1260 790 L1280 802 L320 802 Z" fill="#59443f" />
           <path d="M346 791 L1254 791" fill="none" stroke="#c49a6c" strokeOpacity="0.42" strokeWidth="2" />
+          {/* stepped jharokha tiers give the fallback the same palace facade as the 3D scene. */}
+          <rect x="460" y="450" width="680" height="150" fill="url(#nl-stone)" stroke="#b18a64" strokeWidth="3" />
+          {[0, 1, 2, 3].map((row) => (
+            <g key={row}>
+              {Array.from({ length: 9 }, (_, i) => 502 + i * 70).map((x) => (
+                <g key={x}>
+                  <path d={geo.smallArch} transform={`translate(${x - 13} ${574 - row * 34}) scale(1 0.72)`} fill="#30272d" stroke="#c49a6c" strokeWidth="1.5" />
+                  <rect x={x - 9} y={557 - row * 34} width="18" height="17" fill="url(#nl-jali)" opacity="0.9" />
+                  <path d={`M${x - 19} ${576 - row * 34} h38 l5 5 h-48 Z`} fill="#8e6654" />
+                </g>
+              ))}
+              <path d={`M460 ${580 - row * 34} H1140`} stroke="#c49a6c" strokeOpacity="0.75" strokeWidth="3" />
+            </g>
+          ))}
           {/* outer wall with crenellations */}
           <rect x="460" y="640" width="680" height="122" fill="url(#nl-stone)" />
           {crenels.map((x) => <rect key={x} x={x} y="628" width="12" height="13" fill="#654a45" />)}

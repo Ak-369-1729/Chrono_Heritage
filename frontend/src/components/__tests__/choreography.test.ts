@@ -55,15 +55,26 @@ describe("scroll choreography", () => {
         expect(Math.abs(x)).toBeLessThan(FORT.halfWidth - FORT.wallThickness - 2);
         expect(z).toBeGreaterThan(-FORT.depth + FORT.wallThickness + 2);
       }
-      if (z <= -FORT.depth && z >= -FORT.depth - FORT.wallThickness && y < FORT.gateHeight) {
-        expect(Math.abs(x)).toBeLessThan(2.5);
-        expect(y).toBeLessThan(FORT.gateHeight);
+      if (z <= -FORT.depth && z >= -FORT.depth - FORT.wallThickness && y < FORT.rearGateHeight + 2) {
+        expect(Math.abs(x)).toBeLessThan(FORT.rearGateHalfWidth - 1);
+        expect(y).toBeLessThan(FORT.rearGateHeight);
       }
       const dx = x - FORT.instrument.x;
       const dz = z - FORT.instrument.z;
       if (Math.hypot(dx, dz) < 18) expect(y).toBeGreaterThan(16);
       expect(y).toBeGreaterThan(1.5);
     }
+  });
+
+  it("camera travels through the gallery, horizon room, courtyard, instrument room, archive and terrace in order", () => {
+    const stops = [0.35, 0.43, 0.48, 0.6, 0.74, 0.94].map((p) => cameraAt(p).pos[2]);
+    for (let i = 1; i < stops.length; i++) expect(stops[i]).toBeLessThan(stops[i - 1]);
+    expect(stops[0]).toBeGreaterThan(-34);
+    expect(stops[1]).toBeGreaterThan(-62);
+    expect(stops[2]).toBeGreaterThan(-90);
+    expect(stops[3]).toBeGreaterThan(-122);
+    expect(stops[4]).toBeLessThan(-132);
+    expect(stops[5]).toBeLessThan(-220);
   });
 
   it("ramp, window and caption visibility are bounded", () => {
@@ -90,6 +101,9 @@ describe("scroll choreography", () => {
     expect(layerState(SCENES.courtyard[0] + 0.05).insideOpacity).toBe(1);
     expect(layerState(0.99).insideOpacity).toBe(1);
     expect(layerState(0.99).terrace).toBeGreaterThan(0.9);
+    expect(layerState(0.35).gallery).toBeGreaterThan(0.9);
+    expect(layerState(0.43).horizons).toBeGreaterThan(0.9);
+    expect(layerState(0.72).vault).toBeGreaterThan(0.9);
     expect(skyRotation(0.5)).toBeGreaterThan(skyRotation(0.3));
   });
 

@@ -28,7 +28,7 @@ export const SCENE_COPY = [
   {
     key: "courtyard",
     title: "The Chamber of Horizons",
-    body: "Through the gallery, the view opens to the horizon. Earth's axial tilt changes over millennia, shifting where the solstice Sun rises. This live calculation uses an explicitly illustrative observer; every real prediction belongs to sourced inputs, never a date chosen to fit.",
+    body: "The jharokha gallery opens into a chamber framed around the distant horizon, then leads into the open-air Rajasthani courtyard. Earth's axial tilt changes over millennia, shifting where the solstice Sun rises. This live calculation uses an explicitly illustrative observer; every real prediction belongs to sourced inputs, never a date chosen to fit.",
     href: "/sky",
     action: "Open the Sky Explorer",
   },
@@ -41,14 +41,14 @@ export const SCENE_COPY = [
   },
   {
     key: "vault",
-    title: "The evidence vault",
+    title: "The Evidence Vault / Archive",
     body: "A residual is only as good as the record behind it. The vault keeps the ledger: which sources exist, which benchmarks passed, which are blocked and why, and which questions remain open. It is read live from this platform.",
     href: "/reports",
     action: "Review reports and evidence",
   },
   {
     key: "workspace",
-    title: "The Observatory Terrace",
+    title: "The Rooftop Observatory Terrace",
     body: "The rear arch opens onto the terrace. The brass axis becomes a reference line on a chart; the sky becomes a calculation with a version, a seed and a source for every input, ready for someone else to check.",
   },
 ] as const;
